@@ -9,7 +9,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.codinginflow.mvvmtodo.data.Task
 import com.codinginflow.mvvmtodo.databinding.ItemTaskBinding
 
-class TasksAdapter : ListAdapter<Task, TasksAdapter.TasksViewHolder>(TASKS_COMPARATOR) {
+class TasksAdapter(
+    private val listener: OnItemClickListener
+) : ListAdapter<Task, TasksAdapter.TasksViewHolder>(TASKS_COMPARATOR) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TasksViewHolder {
         val binding = ItemTaskBinding.inflate(
@@ -25,7 +27,29 @@ class TasksAdapter : ListAdapter<Task, TasksAdapter.TasksViewHolder>(TASKS_COMPA
         holder.bind(task)
     }
 
-    class TasksViewHolder(val binding: ItemTaskBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class TasksViewHolder(private val binding: ItemTaskBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+
+        init {
+            binding.apply {
+                root.setOnClickListener {
+                    val position = adapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val task = getItem(position)
+                        listener.onItemClick(task)
+                    }
+                }
+
+                checkBoxComplete.setOnClickListener {
+                    val position = adapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val task = getItem(position)
+                        listener.onCheckBoxClick(task, checkBoxComplete.isChecked)
+                    }
+                }
+            }
+        }
+
         fun bind(task: Task) {
             binding.apply {
                 checkBoxComplete.isChecked = task.completed
@@ -34,6 +58,11 @@ class TasksAdapter : ListAdapter<Task, TasksAdapter.TasksViewHolder>(TASKS_COMPA
                 labelPriority.isVisible = task.important
             }
         }
+    }
+
+    interface OnItemClickListener {
+        fun onItemClick(task: Task)
+        fun onCheckBoxClick(task: Task, isChecked: Boolean)
     }
 
     companion object {
